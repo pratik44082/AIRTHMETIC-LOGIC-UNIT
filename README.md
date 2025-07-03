@@ -27,3 +27,40 @@ always @(*) begin
 end
 
 endmodule# AIRTHMETIC-LOGIC-UNIT
+
+
+module alu #(
+    parameter WIDTH = 8
+)(
+    input  [WIDTH-1:0] a,
+    input  [WIDTH-1:0] b,
+    input  [2:0]       op,
+    output reg [WIDTH-1:0] result,
+    output reg          zero,
+    output reg          carry,
+    output reg          overflow
+);
+    always @(*) begin
+        case(op)
+            3'b000: {carry, result} = a + b;                         // Addition
+            3'b001: {carry, result} = a - b;                         // Subtraction
+            3'b010: result = a & b;                                  // AND
+            3'b011: result = a | b;                                  // OR
+            3'b100: result = a ^ b;                                  // XOR
+            3'b101: result = ~(a | b);                               // NOR
+            3'b110: result = (a < b) ? 1 : 0;                        // Set Less Than
+            default: result = 0;
+        endcase
+        // Set zero flag
+        zero = (result == 0);
+        // Set overflow flag for add/sub
+        if (op == 3'b000) // Add
+            overflow = (~a[WIDTH-1] & ~b[WIDTH-1] & result[WIDTH-1]) | (a[WIDTH-1] & b[WIDTH-1] & ~result[WIDTH-1]);
+        else if (op == 3'b001) // Sub
+            overflow = (~a[WIDTH-1] & b[WIDTH-1] & result[WIDTH-1]) | (a[WIDTH-1] & ~b[WIDTH-1] & ~result[WIDTH-1]);
+        else
+            overflow = 0;
+        if (!(op == 3'b000 || op == 3'b001)) carry = 0;
+    end
+endmodule
+
